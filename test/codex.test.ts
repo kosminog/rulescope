@@ -28,7 +28,7 @@ describe('Codex resolver', () => {
     expect(byPath(list, 'sub/AGENTS.md').status).toBe('inactive');
     // order in the report follows root -> cwd
     const order = list
-      .filter((e) => e.kind === 'instructions' && e.path.includes('project'))
+      .filter((e) => e.kind === 'instructions' && slash(e.path).includes('/project/'))
       .map((e) => e.path);
     expect(order.indexOf(byPath(list, 'project/AGENTS.md').path)).toBeLessThan(
       order.indexOf(byPath(list, 'api/AGENTS.md').path),

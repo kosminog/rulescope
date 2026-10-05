@@ -85,12 +85,12 @@ describe('Claude Code resolver', () => {
     });
     const list = entries(run({ cwd: project, home }), 'claude');
     const skills = list.filter((e) => e.kind === 'skill');
-    expect(skills.find((e) => e.path.includes('home/.claude/skills/deploy'))?.status).toBe(
+    expect(skills.find((e) => slash(e.path).includes('home/.claude/skills/deploy'))?.status).toBe(
       'on-demand',
     );
-    expect(skills.find((e) => e.path.includes('project/.claude/skills/deploy'))?.status).toBe(
-      'shadowed',
-    );
+    expect(
+      skills.find((e) => slash(e.path).includes('project/.claude/skills/deploy'))?.status,
+    ).toBe('shadowed');
     expect(byPath(list, 'hidden/SKILL.md').status).toBe('inactive');
     expect(byPath(list, 'manual/SKILL.md').status).toBe('manual');
     expect(byPath(list, 'commands/deploy.md').status).toBe('shadowed');
