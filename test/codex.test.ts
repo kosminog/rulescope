@@ -80,7 +80,7 @@ describe('Codex resolver', () => {
       '.agents/skills/b/SKILL.md': '---\nname: b\ndescription: b\n---\n',
     });
     tree(home, {
-      '.codex/config.toml': `[[skills.config]]\npath = "${join(project, '.agents/skills/b')}"\nenabled = false\n`,
+      '.codex/config.toml': `[[skills.config]]\npath = '${join(project, '.agents/skills/b')}'\nenabled = false\n`,
     });
     const gated = entries(run({ cwd: project, home }), 'codex');
     expect(byPath(gated, 'project/.codex/config.toml').status).toBe('trust-gated');
@@ -92,7 +92,7 @@ describe('Codex resolver', () => {
         'project/.codex/config.toml',
       ).status,
     ).toBe('active');
-    tree(home, { '.codex/config.toml': `[projects."${project}"]\ntrust_level = "trusted"\n` });
+    tree(home, { '.codex/config.toml': `[projects.'${project}']\ntrust_level = "trusted"\n` });
     expect(
       byPath(entries(run({ cwd: project, home }), 'codex'), 'project/.codex/config.toml').status,
     ).toBe('active');
