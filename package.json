@@ -63,5 +63,14 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vitest": "^5.0.3"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kosminog/rulescope.git"
+  },
+  "homepage": "https://github.com/kosminog/rulescope#readme",
+  "bugs": {
+    "url": "https://github.com/kosminog/rulescope/issues"
+  },
+  "author": "Daniel Turkov"
 }
