@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderHtml, renderTerminal } from '../src/index.js';
-import { run, sandbox, tree } from './helpers.js';
+import { run, sandbox, slash, tree } from './helpers.js';
 
 describe('report assembly and renderers', () => {
   it('computes overlap for files read by more than one tool', () => {
@@ -10,10 +10,10 @@ describe('report assembly and renderers', () => {
       '.claude/skills/x/SKILL.md': '---\nname: x\ndescription: x\n---\n',
     });
     const report = run({ cwd: project, home });
-    const paths = report.overlap.map((o) => o.displayPath);
+    const paths = report.overlap.map((o) => slash(o.displayPath));
     expect(paths).toContain('AGENTS.md');
     expect(paths).toContain('.claude/skills/x/SKILL.md');
-    const agents = report.overlap.find((o) => o.displayPath === 'AGENTS.md');
+    const agents = report.overlap.find((o) => slash(o.displayPath) === 'AGENTS.md');
     expect(agents?.tools.map((t) => t.tool).sort()).toEqual(['codex', 'cursor']);
   });
 

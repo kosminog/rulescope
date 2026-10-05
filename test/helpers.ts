@@ -47,13 +47,18 @@ export function entries(report: Report, tool: ToolId): Entry[] {
   return [...walkEntries(t)];
 }
 
+/** Normalize to forward slashes so suffix matching works on Windows too. */
+export function slash(path: string): string {
+  return path.split('\\').join('/');
+}
+
 export function byPath(list: Entry[], suffix: string): Entry {
-  const hit = list.find((e) => e.path.endsWith(suffix));
+  const hit = list.find((e) => slash(e.path).endsWith(suffix));
   if (!hit)
     throw new Error(`no entry ending with ${suffix}; have ${list.map((e) => e.path).join(', ')}`);
   return hit;
 }
 
 export function statuses(list: Entry[], suffix: string): string[] {
-  return list.filter((e) => e.path.endsWith(suffix)).map((e) => e.status);
+  return list.filter((e) => slash(e.path).endsWith(suffix)).map((e) => e.status);
 }

@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { byPath, entries, run, sandbox, tree } from './helpers.js';
+import { byPath, entries, run, sandbox, slash, tree } from './helpers.js';
 
 function gitProject(project: string): void {
   mkdirSync(join(project, '.git'), { recursive: true });
@@ -124,7 +124,7 @@ describe('Codex resolver', () => {
     tree(home, { '.codex/AGENTS.md': 'ignored' });
     const list = entries(run({ cwd: project, home, env: { CODEX_HOME: codexHome } }), 'codex');
     expect(byPath(list, 'codex-home/AGENTS.md').status).toBe('active');
-    expect(list.some((e) => e.path.endsWith('home/.codex/AGENTS.md'))).toBe(false);
+    expect(list.some((e) => slash(e.path).endsWith('home/.codex/AGENTS.md'))).toBe(false);
     expect(byPath(list, 'fast.config.toml').status).toBe('active');
   });
 });

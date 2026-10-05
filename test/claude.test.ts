@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { byPath, entries, run, sandbox, statuses, tree } from './helpers.js';
+import { byPath, entries, run, sandbox, slash, statuses, tree } from './helpers.js';
 
 describe('Claude Code resolver', () => {
   it('loads user, ancestor and project memory and follows @imports', () => {
@@ -44,7 +44,7 @@ describe('Claude Code resolver', () => {
       'g.md': 'deep',
     });
     const list = entries(run({ cwd: project, home }), 'claude');
-    expect(list.some((e) => e.path.endsWith('notes.md'))).toBe(false);
+    expect(list.some((e) => slash(e.path).endsWith('notes.md'))).toBe(false);
     expect(list.some((e) => e.path.endsWith('fenced.md'))).toBe(false);
     expect(byPath(list, '/e.md').status).toBe('active');
     expect(byPath(list, '/f.md').status).toBe('inactive');
