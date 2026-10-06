@@ -104,6 +104,10 @@ Known gaps are reported rather than hidden:
 - The Claude Code auto-memory directory name is inferred from the project path.
 - Nested `.cursor/rules` directories are scanned but labelled unverified.
 
+## Releasing
+
+Add a changeset with `npx changeset`, merge to `main`, and the release workflow opens a version pull request. Merging that pull request publishes to npm through trusted publishing with provenance; no npm token is stored in the repository.
+
 ## Development
 
 ```bash
