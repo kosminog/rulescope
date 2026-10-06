@@ -51,6 +51,20 @@ describe('Claude Code resolver', () => {
     expect(byPath(list, '/f.md').reason).toContain('hop');
   });
 
+  it('gates imports that lead outside the project unless the project is trusted', () => {
+    const { root, home, project } = sandbox();
+    tree(root, { 'other/shared.md': 'shared' });
+    tree(home, { '.claude/CLAUDE.md': '@~/dev/style.md\n', 'dev/style.md': 'style' });
+    tree(project, { 'CLAUDE.md': '@../../../other/shared.md\n' });
+    const gated = entries(run({ cwd: project, home }), 'claude');
+    expect(byPath(gated, 'other/shared.md').status).toBe('trust-gated');
+    expect(byPath(gated, 'other/shared.md').tags).toContain('external');
+    // imports written in the user's own memory file are not gated
+    expect(byPath(gated, 'dev/style.md').status).toBe('active');
+    const trusted = entries(run({ cwd: project, home, trusted: true }), 'claude');
+    expect(byPath(trusted, 'other/shared.md').status).toBe('active');
+  });
+
   it('marks path-scoped rules conditional and resolves them against --file', () => {
     const { home, project } = sandbox();
     tree(project, {
@@ -196,6 +210,33 @@ describe('Claude Code resolver', () => {
     expect(byPath(list, 'hooks/hooks.json').description).toContain('Stop');
     const ghost = list.find((e) => e.name === 'ghost@mk');
     expect(ghost?.status).toBe('inactive');
+  });
+
+  it('namespaces plugin skills so they do not collide with user skills of the same name', () => {
+    const { home, project } = sandbox();
+    const mk = join(home, '.claude/plugins/marketplaces/mk');
+    tree(home, {
+      '.claude/skills/deploy/SKILL.md': '---\nname: deploy\ndescription: user\n---\n',
+      '.claude/commands/lint.md': 'user command',
+      '.claude/settings.json': '{"enabledPlugins":{"tools@mk":true}}',
+      '.claude/plugins/known_marketplaces.json': JSON.stringify({ mk: { installLocation: mk } }),
+    });
+    tree(mk, {
+      '.claude-plugin/marketplace.json': JSON.stringify({
+        name: 'mk',
+        plugins: [{ name: 'tools', source: './plugins/tools' }],
+      }),
+      'plugins/tools/skills/deploy/SKILL.md': '---\nname: deploy\ndescription: plugin\n---\n',
+      'plugins/tools/commands/lint.md': 'plugin command',
+    });
+    const list = entries(run({ cwd: project, home }), 'claude');
+    const plugin = byPath(list, 'tools/skills/deploy/SKILL.md');
+    expect(plugin.name).toBe('tools:deploy');
+    expect(plugin.status).toBe('on-demand');
+    expect(byPath(list, 'home/.claude/skills/deploy/SKILL.md').status).toBe('on-demand');
+    expect(byPath(list, 'tools/commands/lint.md').name).toBe('tools:lint');
+    expect(byPath(list, 'tools/commands/lint.md').status).toBe('manual');
+    expect(byPath(list, 'home/.claude/commands/lint.md').status).toBe('manual');
   });
 
   it('lists project MCP servers and applies settings approvals', () => {
