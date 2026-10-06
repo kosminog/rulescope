@@ -1,6 +1,6 @@
 {
   "name": "rulescope",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Show which instruction files, rules and skills Claude Code, Codex and Cursor will load for a directory, in the terminal or as an HTML report",
   "keywords": [
     "claude-code",
