@@ -1,4 +1,4 @@
-import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import type { ResolveContext } from '../context.js';
 import { DOCS } from '../docs.js';
 import { findSkillFiles, loadFile, makeEntry, makeScope, type LoadedFile } from '../entry.js';
@@ -398,8 +398,10 @@ function importEntries(
       continue;
     }
     const childLoaded = loadFile(target);
+    // Imports from user memory are the user's own choice; imports that lead a
+    // project file outside the project (and outside ~/.claude) need approval.
     const external =
-      !isInside(ctx.cwd, target) && !isInside(configDir, target) && !isInside(ctx.home, fromPath);
+      !isInside(ctx.cwd, target) && !isInside(configDir, target) && !isInside(configDir, fromPath);
     const entry = makeEntry(
       ctx,
       {
@@ -535,13 +537,16 @@ function skillEntries(
   settings: MergedSettings,
   seen: Set<string>,
   root: string,
+  /** Plugin name; plugin skills are invoked as `plugin:skill` and do not collide with bare names. */
+  namespace?: string,
 ): Entry[] {
   const out: Entry[] = [];
   for (const path of findSkillFiles(dir)) {
     const loaded = loadFile(path);
     if (!loaded) continue;
     const fm = loaded.frontmatter ?? {};
-    const name = typeof fm.name === 'string' ? fm.name : basename(dirname(path));
+    const bare = typeof fm.name === 'string' ? fm.name : basename(dirname(path));
+    const name = namespace ? `${namespace}:${bare}` : bare;
     const override = settings.skillOverrides[name];
     const paths = asStringList(fm.paths);
     let status: Status = 'on-demand';
@@ -588,10 +593,16 @@ function skillEntries(
   return out;
 }
 
-function commandEntries(ctx: ResolveContext, dir: string, skillNames: Set<string>): Entry[] {
+function commandEntries(
+  ctx: ResolveContext,
+  dir: string,
+  skillNames: Set<string>,
+  namespace?: string,
+): Entry[] {
   if (!isDir(dir)) return [];
   return findFiles(dir, (n) => n.endsWith('.md')).map((path) => {
-    const name = relative(dir, path).replace(/\.md$/, '').split('/').join(':');
+    const bare = relative(dir, path).replace(/\.md$/, '').split(sep).join(':');
+    const name = namespace ? `${namespace}:${bare}` : bare;
     const shadowed = skillNames.has(name);
     return makeEntry(ctx, {
       tool: TOOL,
@@ -956,9 +967,10 @@ function pluginScope(
       settings,
       skillNames,
       ctx.cwd,
+      name,
     ),
   );
-  scope.entries.push(...commandEntries(ctx, join(dir, 'commands'), skillNames));
+  scope.entries.push(...commandEntries(ctx, join(dir, 'commands'), skillNames, name));
   scope.entries.push(
     ...agentEntries(ctx, join(dir, 'agents'), agentNames, 'plugin subagents are lowest precedence'),
   );

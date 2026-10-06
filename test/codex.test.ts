@@ -98,6 +98,16 @@ describe('Codex resolver', () => {
     ).toBe('active');
   });
 
+  it('expands ~ in skills.config paths against the inspected home, not $HOME', () => {
+    const { home, project } = sandbox();
+    tree(home, {
+      '.agents/skills/a/SKILL.md': '---\nname: a\ndescription: a\n---\n',
+      '.codex/config.toml': `[[skills.config]]\npath = '~/.agents/skills/a'\nenabled = false\n`,
+    });
+    const list = entries(run({ cwd: project, home, env: { HOME: '/elsewhere' } }), 'codex');
+    expect(byPath(list, 'a/SKILL.md').status).toBe('inactive');
+  });
+
   it('discovers user skills in ~/.agents/skills and legacy ~/.codex/skills, flagging duplicates', () => {
     const { home, project } = sandbox();
     tree(home, {
