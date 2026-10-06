@@ -67,6 +67,9 @@ rulescope [dir] [options]
       --no-color            disable colors
 
 rulescope explain <path>    show what each tool does with one file
+  -C, --dir <dir>           directory to evaluate (default .)
+                            also accepts --tool, --file, --home, --add-dir,
+                            --codex-profile, --trusted and --depth
 ```
 
 Examples:
