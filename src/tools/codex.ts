@@ -486,7 +486,7 @@ function skillEntries(
   reason: string,
   tags: string[] = [],
 ): Entry[] {
-  const disabled = disabledSkillPaths(config);
+  const disabled = disabledSkillPaths(config, ctx.home);
   const out: Entry[] = [];
   for (const path of findSkillFiles(dir)) {
     const loaded = loadFile(path);
@@ -517,14 +517,14 @@ function skillEntries(
   return out;
 }
 
-function disabledSkillPaths(config: CodexConfig): string[] {
+function disabledSkillPaths(config: CodexConfig, home: string): string[] {
   const skills = config.effective.skills as Toml | undefined;
   const rows = skills?.config;
   if (!Array.isArray(rows)) return [];
   const out: string[] = [];
   for (const row of rows as Toml[]) {
     if (row.enabled === false && typeof row.path === 'string')
-      out.push(resolve(row.path.replace(/^~(?=\/|$)/, process.env.HOME ?? '~')));
+      out.push(resolve(row.path.replace(/^~(?=[\\/]|$)/, home)));
   }
   return out;
 }
